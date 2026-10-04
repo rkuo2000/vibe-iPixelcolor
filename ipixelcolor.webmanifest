@@ -1,0 +1,19 @@
+{
+  "id": "./iPixelcolor.html",
+  "name": "iPixel Color 96×16 Studio",
+  "short_name": "iPixel Color",
+  "description": "Bluetooth controller for iPixel Color 96×16 LED panels: text, drawing, images, GIFs, clock, scoreboard, and music rhythm.",
+  "lang": "en",
+  "start_url": "./iPixelcolor.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0f17",
+  "theme_color": "#0b0f17",
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "./icons/ipixelcolor-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/ipixelcolor-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/ipixelcolor-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

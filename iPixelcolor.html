@@ -1,0 +1,1276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0f17">
+<meta name="description" content="Bluetooth controller for iPixel Color 96×16 LED panels.">
+<meta name="application-name" content="iPixel Color">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="iPixel Color">
+<link rel="manifest" href="./ipixelcolor.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/ipixelcolor-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/ipixelcolor-180.png">
+<link rel="preload" href="./fonts/unifont.woff2" as="font" type="font/woff2" crossorigin>
+<title>iPixel Color Studio</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0f17;--panel:#131926;--panel-2:#0e131e;--line:#253046;--line-2:#34405a;--text:#e8edf7;--muted:#97a3bb;--accent:#ff9d5c;--accent-ink:#1f1308;--ok:#6fdcaa;--err:#ff9a9a;--warn:#ffd27a;--r:16px}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:radial-gradient(ellipse at 10% -10%,#2a1d2c 0,transparent 45%),radial-gradient(ellipse at 100% 0,#14263a 0,transparent 40%),var(--bg);background-attachment:fixed;color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+main{max-width:1120px;margin:auto;padding:24px 20px calc(40px + env(safe-area-inset-bottom))}
+h1,h2,h3{margin:0;line-height:1.2}h2{font-size:18px;margin-bottom:4px}h3{font-size:14px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin:22px 0 10px}
+p{margin:0}.muted{color:var(--muted)}.small{font-size:13px}.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line-2);border-radius:11px;background:#1d2536;padding:9px 15px;font-weight:600;min-height:40px;touch-action:manipulation}
+button:hover:enabled{background:#26304a}button:disabled{opacity:.4;cursor:not-allowed}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}button.primary:hover:enabled{background:#ffb07c}
+button.danger{border-color:#6b3340;color:#ffb3bd}button.ghost{background:transparent}
+button[aria-pressed=true]{background:#3a2a1f;border-color:var(--accent);color:#ffd2b3}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=text],input[type=number],input[type=time],select,textarea{width:100%;background:var(--panel-2);border:1px solid var(--line-2);border-radius:10px;padding:9px 11px;min-height:40px}
+textarea{resize:vertical;min-height:70px}
+input[type=range]{width:100%;accent-color:var(--accent)}input[type=checkbox],input[type=radio]{accent-color:var(--accent);width:17px;height:17px}
+input[type=color]{width:44px;height:40px;padding:2px;border:1px solid var(--line-2);border-radius:10px;background:var(--panel-2);cursor:pointer}
+label{color:var(--muted);font-size:13px;font-weight:600}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}.field>.row{justify-content:space-between}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.spread{justify-content:space-between}
+.check{display:inline-flex;align-items:center;gap:8px;color:var(--text);font-weight:500;font-size:14px;cursor:pointer}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+header.top{display:flex;align-items:center;gap:14px;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:12px}.brand img{width:42px;height:42px;border-radius:11px}
+.brand h1{font-size:21px;letter-spacing:-.02em}.brand span{color:var(--muted);font-size:13px;font-weight:500}
+.pill{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border:1px solid var(--line-2);border-radius:99px;font-size:13px;color:var(--muted);white-space:nowrap}
+.pill::before{content:"";width:8px;height:8px;border-radius:50%;background:#5a6680}
+.pill.live{color:var(--ok);border-color:#2f6b52}.pill.live::before{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.pill.busy{color:var(--warn);border-color:#6d5a2c}.pill.busy::before{background:var(--warn)}
+#message{margin:0 0 14px;padding:10px 14px;border-radius:12px;background:#172034;color:#c9d5ee;font-size:14px;overflow-wrap:anywhere}
+#message.error{background:#3a1f29;color:#ffc4cc}#message.ok{background:#15302a;color:#b7f0d6}
+.stage{padding:14px;background:linear-gradient(#10151f,#0b0f17)}
+#led{display:block;width:100%;aspect-ratio:6/1;border-radius:8px;background:#05070b;image-rendering:auto}
+#led.drawable{cursor:crosshair;touch-action:none}
+.stage-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted)}
+#progress{width:100%;height:6px;margin-top:10px;accent-color:var(--accent)}
+.quick{display:grid;grid-template-columns:auto minmax(160px,1fr) auto auto;gap:14px;align-items:end;margin-top:14px}
+.seg{align-self:flex-start;display:inline-flex;border:1px solid var(--line-2);border-radius:11px;overflow:hidden}.seg button{border:0;border-radius:0;min-width:56px}.seg button+button{border-left:1px solid var(--line-2)}
+.tabs{display:flex;gap:4px;overflow-x:auto;margin:18px 0 0;padding:4px;background:var(--panel-2);border:1px solid var(--line);border-radius:14px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:1 0 auto;border:0;background:transparent;color:var(--muted);min-height:38px;padding:8px 14px}
+.tabs button[aria-selected=true]{background:#26304a;color:var(--text)}
+.panel{margin-top:14px}.panel>.card+.card{margin-top:14px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.swatches{display:flex;gap:7px;flex-wrap:wrap}
+.swatches button{width:30px;height:30px;min-height:0;padding:0;border-radius:50%;background:var(--c);border:2px solid #ffffff30}
+.swatches button[aria-pressed=true]{border-color:#fff;box-shadow:0 0 0 2px var(--accent)}
+.hint{font-size:13px;color:var(--muted);margin-top:8px}
+.tag{font-family:ui-monospace,Menlo,Consolas,monospace;background:#0b1019;border:1px solid var(--line);border-radius:6px;padding:1px 5px;font-size:12px;color:#ffd2b3;cursor:pointer}
+details{margin-top:14px}summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px}details[open] summary{margin-bottom:12px}
+.score{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.player{text-align:center;padding:14px;border-radius:14px;background:var(--panel-2);border:1px solid var(--line)}
+.player output{display:block;font:700 54px/1.1 ui-monospace,Menlo,Consolas,monospace;margin:4px 0 10px}
+.player .row{justify-content:center}.player button{min-width:64px;font-size:20px}
+.eq{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:6px;align-items:end;height:170px;padding:10px 6px 0}
+.eq .band{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}
+.eq input[type=range]{writing-mode:vertical-lr;direction:rtl;width:28px;flex:1;margin:0}
+.eq output{font-size:11px;color:var(--muted)}
+.days{display:flex;gap:6px;flex-wrap:wrap}.days label{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border:1px solid var(--line-2);border-radius:9px;color:var(--text);font-weight:500;cursor:pointer}
+.slotgrid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px}.slotgrid button{padding:6px 0;min-height:38px}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.drop{border:1.5px dashed var(--line-2);border-radius:14px;padding:20px;text-align:center;color:var(--muted)}.drop.over{border-color:var(--accent);color:var(--text)}
+pre#log{font:12px/1.6 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;background:#080b11;border:1px solid var(--line);padding:12px;border-radius:12px;max-height:260px;overflow:auto;color:#aebbd6;margin:0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}.kv dt{color:var(--muted)}.kv dd{margin:0}
+footer{margin-top:26px;color:var(--muted);font-size:12px;line-height:1.7}
+[hidden]{display:none!important}
+@media (max-width:760px){
+  main{padding:16px 16px calc(32px + env(safe-area-inset-bottom))}
+  .g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .quick{grid-template-columns:1fr 1fr}.quick .bright{grid-column:1/-1;order:-1}
+  .player output{font-size:42px}.slotgrid{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .eq{gap:3px}.eq input[type=range]{width:22px}
+}
+@media (max-width:440px){.g2{grid-template-columns:1fr}.brand span{display:none}}
+</style>
+</head>
+<body>
+<main>
+<header class="top">
+  <div class="brand"><img src="./icons/ipixelcolor-192.png" alt=""><div><h1>iPixel Color</h1><span>96 × 16 LED panel studio</span></div></div>
+  <div class="row">
+    <span class="pill" id="connPill" role="status">Disconnected</span>
+    <button class="primary" id="connectBtn">Connect panel</button>
+    <button id="installBtn" hidden>Install app</button>
+  </div>
+</header>
+
+<div id="message" role="status" aria-live="polite">Preview works offline. To control the panel, open this page in Chrome or Edge over HTTPS (or localhost) and press Connect.</div>
+
+<section class="card stage" aria-label="Panel preview">
+  <canvas id="led" width="1152" height="192" aria-label="96 by 16 LED preview"></canvas>
+  <progress id="progress" max="1" value="0" hidden></progress>
+  <div class="stage-meta"><span id="previewLabel">Preview</span><span id="deviceLabel">No panel connected</span></div>
+  <div class="quick">
+    <div class="field"><label>Power</label><div class="seg"><button id="powerOn" data-dev>On</button><button id="powerOff" data-dev>Off</button></div></div>
+    <div class="field bright"><div class="row spread"><label for="brightness">Brightness</label><output id="brightnessOut" class="small">80%</output></div><input id="brightness" type="range" min="0" max="100" value="80"></div>
+    <div class="field"><label for="orientation">Orientation</label><select id="orientation" data-dev><option value="0">0 · normal</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+    <div class="field"><label>Clock</label><button id="syncTime" data-dev>Sync time</button></div>
+  </div>
+</section>
+
+<nav class="tabs" role="tablist" aria-label="Modes">
+  <button role="tab" id="tab-text" aria-controls="panel-text" aria-selected="true">Text</button>
+  <button role="tab" id="tab-draw" aria-controls="panel-draw" aria-selected="false">Draw</button>
+  <button role="tab" id="tab-image" aria-controls="panel-image" aria-selected="false">Image / GIF</button>
+  <button role="tab" id="tab-clock" aria-controls="panel-clock" aria-selected="false">Clock</button>
+  <button role="tab" id="tab-score" aria-controls="panel-score" aria-selected="false">Score &amp; Timer</button>
+  <button role="tab" id="tab-rhythm" aria-controls="panel-rhythm" aria-selected="false">Rhythm</button>
+  <button role="tab" id="tab-slots" aria-controls="panel-slots" aria-selected="false">Slots &amp; Schedule</button>
+  <button role="tab" id="tab-device" aria-controls="panel-device" aria-selected="false">Device</button>
+</nav>
+
+<!-- TEXT -->
+<section class="panel" id="panel-text" role="tabpanel" aria-labelledby="tab-text">
+  <div class="card">
+    <div class="field">
+      <label for="textInput">Message</label>
+      <textarea id="textInput" rows="2" maxlength="600" spellcheck="false">[#ff9d5c]Hello[/] 96×16 你好 ✨</textarea>
+    </div>
+    <p class="hint">Inline colors: <span class="tag" data-insert="[#ff3b30]">[#ff3b30]</span> text <span class="tag" data-insert="[/]">[/]</span> · Emoji are sent as tiny pictures · Up to 255 characters · <span id="textCount">0</span> used</p>
+    <div class="grid g4" style="margin-top:14px">
+      <div class="field"><label for="textColor">Text color</label><input id="textColor" type="color" value="#ffffff"></div>
+      <div class="field"><label class="check" style="font-size:13px;color:var(--muted)"><input id="bgOn" type="checkbox"> Background</label><input id="bgColor" type="color" value="#001a40"></div>
+      <div class="field"><label for="animation">Animation</label><select id="animation"><option value="0">Static</option><option value="1" selected>Scroll left</option><option value="2">Scroll right</option><option value="5">Blink</option><option value="6">Fade / breathe</option><option value="7">Snowflake</option></select></div>
+      <div class="field"><label for="rainbow">Rainbow</label><select id="rainbow"><option value="0">Off</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option></select></div>
+    </div>
+    <div class="swatches" id="textSwatches" style="margin-top:12px" aria-label="Text color presets"></div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="field"><div class="row spread"><label for="speed">Speed</label><output id="speedOut" class="small">80</output></div><input id="speed" type="range" min="0" max="100" value="80"></div>
+      <div class="field"><label for="textSlot">Save slot</label><input id="textSlot" type="number" min="0" max="255" value="0"></div>
+    </div>
+    <details>
+      <summary>Font</summary>
+      <div class="grid g4">
+        <div class="field"><label for="fontFamily">Typeface</label><select id="fontFamily"><option value="unifont">Unifont (pixel, CJK)</option><option value="sans">Sans bold</option><option value="serif">Serif bold</option><option value="mono">Monospace</option><option value="custom">Custom file…</option></select></div>
+        <div class="field"><label for="fontSize">Size (px)</label><input id="fontSize" type="number" min="6" max="32" value="16"></div>
+        <div class="field"><label for="fontOffset">Vertical offset</label><input id="fontOffset" type="number" min="-12" max="12" value="0"></div>
+        <div class="field"><label for="fontThreshold">Pixel threshold</label><input id="fontThreshold" type="number" min="1" max="254" value="128"></div>
+      </div>
+      <div class="row" style="margin-top:12px"><label class="check"><input id="varWidth" type="checkbox"> Variable width (proportional; ignores inline colors)</label><input id="fontFile" type="file" accept=".ttf,.otf,.woff,.woff2" hidden></div>
+    </details>
+    <div class="actions"><button class="primary" id="sendText" data-dev>Send text</button><button id="textToDraw">Edit as drawing</button></div>
+  </div>
+</section>
+
+<!-- DRAW -->
+<section class="panel" id="panel-draw" role="tabpanel" aria-labelledby="tab-draw" hidden>
+  <div class="card">
+    <p class="muted small">Paint directly on the preview above. Two-finger scrolling still works outside the panel.</p>
+    <div class="row spread" style="margin-top:12px">
+      <div class="tools" role="group" aria-label="Tool">
+        <button data-tool="pen" aria-pressed="true">Pen</button><button data-tool="erase" aria-pressed="false">Eraser</button><button data-tool="fill" aria-pressed="false">Fill</button><button data-tool="pick" aria-pressed="false">Picker</button>
+      </div>
+      <div class="row"><input id="drawColor" type="color" value="#ff9d5c" aria-label="Brush color"><div class="swatches" id="drawSwatches"></div></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button id="undo">Undo</button><button id="shiftL" aria-label="Shift left">◀</button><button id="shiftR" aria-label="Shift right">▶</button><button id="shiftU" aria-label="Shift up">▲</button><button id="shiftD" aria-label="Shift down">▼</button><button id="flipH">Mirror</button><button id="drawClear" class="danger">Clear</button>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="field"><label for="drawSlot">Save slot</label><input id="drawSlot" type="number" min="0" max="255" value="0"></div>
+      <div class="field"><label>Live mode</label><label class="check"><input id="livePixels" type="checkbox" data-dev> Stream each pixel as you paint (enables DIY mode)</label></div>
+    </div>
+    <div class="actions"><button class="primary" id="sendDraw" data-dev>Send drawing</button><button id="exportPng">Download PNG</button></div>
+  </div>
+</section>
+
+<!-- IMAGE -->
+<section class="panel" id="panel-image" role="tabpanel" aria-labelledby="tab-image" hidden>
+  <div class="card">
+    <div class="drop" id="drop"><p>Drop a PNG, JPG, WebP or animated GIF here</p><div class="actions" style="justify-content:center"><button id="pickImage">Choose image…</button></div><input id="imageFile" type="file" accept="image/*" hidden></div>
+    <p class="hint" id="imageInfo">No image loaded. Images are resized to 96 × 16 before sending, like pypixelcolor does.</p>
+    <div class="grid g4" style="margin-top:14px">
+      <div class="field"><label for="fitMode">Resize</label><select id="fitMode"><option value="crop">Crop to fill</option><option value="fit">Fit (black bars)</option><option value="stretch">Stretch</option></select></div>
+      <div class="field"><label for="pan">Crop position</label><input id="pan" type="range" min="0" max="100" value="50"></div>
+      <div class="field"><label for="smoothing">Scaling</label><select id="smoothing"><option value="smooth">Smooth (photos)</option><option value="pixel">Pixelated (pixel art)</option></select></div>
+      <div class="field"><label for="imageSlot">Save slot</label><input id="imageSlot" type="number" min="0" max="255" value="0"></div>
+    </div>
+    <div class="actions"><button class="primary" id="sendImage" data-dev disabled>Send image</button><button id="imageToDraw" disabled>Edit frame as drawing</button></div>
+  </div>
+</section>
+
+<!-- CLOCK -->
+<section class="panel" id="panel-clock" role="tabpanel" aria-labelledby="tab-clock" hidden>
+  <div class="card">
+    <h2>Clock mode</h2><p class="muted small">The panel keeps time itself; sending syncs it to this device first. Styles 0–8 are drawn by the panel firmware, so the preview is only a guide.</p>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="field"><label for="clockStyle">Style</label><select id="clockStyle"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div>
+      <div class="field"><label>Format</label><label class="check"><input id="clock24" type="checkbox" checked> 24-hour</label></div>
+      <div class="field"><label>Date</label><label class="check"><input id="clockDate" type="checkbox" checked> Show date</label></div>
+    </div>
+    <div class="actions"><button class="primary" id="sendClock" data-dev>Show clock</button></div>
+  </div>
+</section>
+
+<!-- SCORE & TIMER -->
+<section class="panel" id="panel-score" role="tabpanel" aria-labelledby="tab-score" hidden>
+  <div class="card">
+    <div class="row spread"><h2>Scoreboard</h2><label class="check"><input id="scoreAuto" type="checkbox" checked> Send on every change</label></div>
+    <div class="score" style="margin-top:14px">
+      <div class="player"><label>Player 1</label><output id="p1">0</output><div class="row"><button data-score="p1" data-d="-1" aria-label="Player 1 minus">−</button><button data-score="p1" data-d="1" aria-label="Player 1 plus">+</button></div></div>
+      <div class="player"><label>Player 2</label><output id="p2">0</output><div class="row"><button data-score="p2" data-d="-1" aria-label="Player 2 minus">−</button><button data-score="p2" data-d="1" aria-label="Player 2 plus">+</button></div></div>
+    </div>
+    <div class="actions"><button class="primary" id="sendScore" data-dev>Send score</button><button id="resetScore">Reset 0 : 0</button></div>
+  </div>
+  <div class="card">
+    <h2>Timer</h2><p class="muted small">Controls the panel's built-in stopwatch.</p>
+    <div class="actions"><button class="primary" data-timer="1" data-dev>Start</button><button data-timer="2" data-dev>Pause</button><button data-timer="0" data-dev>Stop</button></div>
+  </div>
+</section>
+
+<!-- RHYTHM -->
+<section class="panel" id="panel-rhythm" role="tabpanel" aria-labelledby="tab-rhythm" hidden>
+  <div class="card">
+    <div class="row spread"><h2>Equalizer</h2><div class="field" style="min-width:140px"><label for="rhythmStyle">Style</label><select id="rhythmStyle"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div></div>
+    <div class="eq" id="eq" aria-label="11 band levels"></div>
+    <div class="grid g2" style="margin-top:12px">
+      <div class="field"><label>Live microphone</label><button id="micBtn" aria-pressed="false">Start microphone</button></div>
+      <div class="field"><div class="row spread"><label for="micGain">Sensitivity</label><output id="micGainOut" class="small">1.0×</output></div><input id="micGain" type="range" min="0.3" max="3" step="0.1" value="1"></div>
+    </div>
+    <p class="hint">Microphone mode listens locally and streams 11 band levels to the panel about eight times a second. Nothing is recorded or uploaded.</p>
+    <div class="actions"><button class="primary" id="sendRhythm" data-dev>Send levels</button><button id="randomEq">Randomize</button></div>
+  </div>
+  <div class="card">
+    <h2>Rhythm animation</h2><p class="muted small">Alternative built-in rhythm effect.</p>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="field"><label for="r2style">Style</label><select id="r2style"><option value="0">0</option><option value="1">1</option></select></div>
+      <div class="field"><div class="row spread"><label for="r2time">Animation time</label><output id="r2timeOut" class="small">0</output></div><input id="r2time" type="range" min="0" max="7" value="0"></div>
+    </div>
+    <div class="actions"><button class="primary" id="sendRhythm2" data-dev>Start animation</button></div>
+  </div>
+</section>
+
+<!-- SLOTS & SCHEDULE -->
+<section class="panel" id="panel-slots" role="tabpanel" aria-labelledby="tab-slots" hidden>
+  <div class="card">
+    <h2>Saved slots</h2><p class="muted small">Text, drawings and images sent with a save slot stay on the panel. Show an empty slot and the panel cycles through all stored slots.</p>
+    <div class="slotgrid" id="slotGrid" style="margin-top:14px"></div>
+    <div class="grid g3" style="margin-top:14px;align-items:end">
+      <div class="field"><label for="slotNum">Slot</label><input id="slotNum" type="number" min="0" max="255" value="1"></div>
+      <button id="showSlot" data-dev>Show slot</button>
+      <button id="deleteSlot" class="danger" data-dev>Delete slot</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>On / off schedule</h2><p class="muted small">Turn the display on or off automatically at a set time.</p>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="field"><label for="schedTime">Time</label><input id="schedTime" type="time" value="07:30"></div>
+      <div class="field"><label for="schedAction">Action</label><select id="schedAction"><option value="1">Turn on</option><option value="0">Turn off</option></select></div>
+      <div class="field"><label for="schedSlot">Schedule slot</label><input id="schedSlot" type="number" min="0" max="255" value="0"></div>
+    </div>
+    <div class="field" style="margin-top:14px"><label>Days</label><div class="days" id="schedDays"></div></div>
+    <div class="actions"><button class="primary" id="sendSchedule" data-dev>Save schedule</button></div>
+  </div>
+</section>
+
+<!-- DEVICE -->
+<section class="panel" id="panel-device" role="tabpanel" aria-labelledby="tab-device" hidden>
+  <div class="card">
+    <h2>Panel</h2>
+    <dl class="kv" id="deviceInfo" style="margin-top:12px"><dt>Status</dt><dd>Not connected</dd></dl>
+    <div class="actions"><button id="funOn" data-dev>DIY mode on</button><button id="funOff" data-dev>DIY mode off</button><button id="clearDevice" class="danger" data-dev>Erase stored content…</button></div>
+  </div>
+  <div class="card">
+    <h2>Connection settings</h2>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="field"><label for="transport">Connect through</label><select id="transport"><option value="auto">Auto</option><option value="web">Web Bluetooth</option><option value="bridge">Local bridge (ipixel-bridge.py)</option></select></div>
+      <div class="field"><label for="bridgeUrl">Bridge address</label><input id="bridgeUrl" type="text" class="mono" value="ws://localhost:8765/ble"></div>
+      <div class="field"><label>Device picker</label><label class="check"><input id="showAll" type="checkbox"> Show all Bluetooth devices</label></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <select id="bridgeDevice" style="flex:1" aria-label="Panel found by the bridge"><option value="">Bridge: scan to list panels</option></select>
+      <button id="bridgeScan">Scan with bridge</button>
+    </div>
+    <p class="hint">Auto uses the local bridge when this page is served by it or the browser has no Web Bluetooth (Chrome on Linux). Run <code>python3 ipixel-bridge.py</code>, then open <code>http://localhost:8765/</code>. It scans and connects with bleak, like iPixel-CLI.</p>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="field"><label for="chunkSize">Write chunk (bytes)</label><input id="chunkSize" type="number" min="20" max="512" value="244"></div>
+      <div class="field"><label for="ackTimeout">Ack timeout (s)</label><input id="ackTimeout" type="number" min="1" max="30" value="8"></div>
+    </div>
+    <p class="hint">pypixelcolor writes 244-byte chunks. If large transfers stall, try 180 or 20.</p>
+    <details><summary>Raw command</summary>
+      <div class="row"><input id="rawHex" type="text" class="mono" placeholder="05 00 04 80 32" style="flex:1"><button id="sendRaw" data-dev>Send hex</button></div>
+    </details>
+  </div>
+  <div class="card">
+    <div class="row spread"><h2>Log</h2><button id="clearLog" class="ghost">Clear</button></div>
+    <pre id="log" style="margin-top:12px" aria-live="off"></pre>
+  </div>
+</section>
+
+<footer>
+  Protocol ported from <a href="https://github.com/lucagoc/pypixelcolor" rel="noopener">pypixelcolor</a> by lucagoc. Text uses <a href="./fonts/UNIFONT_LICENSE.txt">GNU Unifont</a> (SIL OFL 1.1).
+  Web Bluetooth runs in Chrome and Edge on Android, Windows, macOS and ChromeOS; on iPhone and iPad use a Web Bluetooth browser such as Bluefy. On Linux, run the local bridge (<code>python3 ipixel-bridge.py</code>), which connects with bleak like <a href="https://github.com/SuperIlu/iPixel-CLI" rel="noopener">iPixel-CLI</a>.
+  <span id="appStatus"></span>
+</footer>
+</main>
+
+<script src="./ipixel-protocol.js"></script>
+<script>
+'use strict';
+const P = window.IPixel;
+const W = 96, H = 16;
+const $ = id => document.getElementById(id);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const hexToRgb = h => P.parseColor(h);
+const rgbToHex = ([r, g, b]) => '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+const SWATCHES = ['#ffffff', '#ff3b30', '#ff9d5c', '#ffd60a', '#34c759', '#00c7be', '#0a84ff', '#bf5af2', '#ff2d92'];
+
+// ---------- persistence (per-browser convenience only) ----------
+const store = {
+  get(key, fallback) { try { const v = localStorage.getItem('ipx.' + key); return v == null ? fallback : JSON.parse(v); } catch { return fallback; } },
+  set(key, value) { try { localStorage.setItem('ipx.' + key, JSON.stringify(value)); } catch { /* storage unavailable */ } }
+};
+
+// ---------- messages & log ----------
+function say(text, kind = '') { const m = $('message'); m.textContent = text; m.className = kind; }
+const logLines = [];
+function log(text) {
+  const t = new Date().toLocaleTimeString([], { hour12: false });
+  logLines.push(`${t}  ${text}`);
+  if (logLines.length > 400) logLines.splice(0, logLines.length - 400);
+  const el = $('log'); el.textContent = logLines.join('\n'); el.scrollTop = el.scrollHeight;
+}
+
+// ---------- LED preview ----------
+const led = $('led'), lctx = led.getContext('2d');
+const frame = new Uint8ClampedArray(W * H * 4);
+const frameCanvas = Object.assign(document.createElement('canvas'), { width: W, height: H });
+const fctx = frameCanvas.getContext('2d');
+const PITCH = led.width / W;
+let renderer = () => {};
+let lastDraw = 0;
+
+function clearFrame(rgb = [0, 0, 0]) { for (let i = 0; i < frame.length; i += 4) { frame[i] = rgb[0]; frame[i + 1] = rgb[1]; frame[i + 2] = rgb[2]; frame[i + 3] = 255; } }
+function setPx(x, y, rgb, a = 1) {
+  if (x < 0 || y < 0 || x >= W || y >= H) return;
+  const i = (y * W + x) * 4;
+  frame[i] = frame[i] * (1 - a) + rgb[0] * a; frame[i + 1] = frame[i + 1] * (1 - a) + rgb[1] * a; frame[i + 2] = frame[i + 2] * (1 - a) + rgb[2] * a;
+}
+function paintLed() {
+  fctx.putImageData(new ImageData(frame, W, H), 0, 0);
+  lctx.globalAlpha = 1; lctx.filter = 'none';
+  lctx.fillStyle = '#05070b'; lctx.fillRect(0, 0, led.width, led.height);
+  // soft glow underneath the dots
+  lctx.imageSmoothingEnabled = true; lctx.filter = 'blur(7px)'; lctx.globalAlpha = .55;
+  lctx.drawImage(frameCanvas, 0, 0, led.width, led.height);
+  lctx.filter = 'none'; lctx.globalAlpha = 1;
+  const r = PITCH * .4;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = (y * W + x) * 4, R = frame[i], G = frame[i + 1], B = frame[i + 2];
+    const lit = R + G + B > 24;
+    lctx.fillStyle = lit ? `rgb(${R},${G},${B})` : '#161c28';
+    lctx.beginPath(); lctx.arc((x + .5) * PITCH, (y + .5) * PITCH, lit ? r : r * .8, 0, Math.PI * 2); lctx.fill();
+  }
+}
+function loop(t) {
+  if (t - lastDraw > 33) { lastDraw = t; renderer(t); paintLed(); }
+  requestAnimationFrame(loop);
+}
+
+// ---------- glyph engine (mirrors pypixelcolor's PIL rendering) ----------
+const FONTS = {
+  unifont: { css: '"Unifont", monospace', weight: '', size: 16, varWidth: false },
+  sans: { css: 'system-ui, "Segoe UI", Roboto, Arial, sans-serif', weight: 'bold', size: 13, varWidth: true },
+  serif: { css: 'Georgia, "Times New Roman", serif', weight: 'bold', size: 14, varWidth: true },
+  mono: { css: 'ui-monospace, Menlo, Consolas, monospace', weight: 'bold', size: 13, varWidth: false },
+  custom: { css: '"IPXCustom", sans-serif', weight: '', size: 16, varWidth: true }
+};
+const gcan = document.createElement('canvas'); gcan.height = H;
+const gctx = gcan.getContext('2d', { willReadFrequently: true });
+let glyphCache = new Map();
+let customFontLoaded = false;
+
+function fontSpec() {
+  const f = FONTS[$('fontFamily').value] || FONTS.unifont;
+  return { css: f.css, weight: f.weight, size: +$('fontSize').value || 16, offset: +$('fontOffset').value || 0,
+    threshold: clamp(+$('fontThreshold').value || 128, 1, 254), varWidth: $('varWidth').checked };
+}
+const UNIFONT_SPEC = { css: FONTS.unifont.css, weight: '', size: 16, offset: 0, threshold: 128, varWidth: false };
+const specKey = s => `${s.weight}|${s.size}|${s.css}|${s.offset}|${s.threshold}`;
+function setFont(s) { gctx.font = `${s.weight} ${s.size}px ${s.css}`.trim(); gctx.textBaseline = 'alphabetic'; gctx.textAlign = 'left'; }
+function ascentFor(s) { setFont(s); const m = gctx.measureText('Hg'); return Math.round(m.fontBoundingBoxAscent ?? m.actualBoundingBoxAscent ?? s.size * .875); }
+function isWideChar(ch) {
+  const c = ch.codePointAt(0);
+  return (c >= 0x1100 && c <= 0x115f) || (c >= 0x2e80 && c <= 0xa4cf && c !== 0x303f) || (c >= 0xac00 && c <= 0xd7a3) ||
+    (c >= 0xf900 && c <= 0xfaff) || (c >= 0xfe30 && c <= 0xfe4f) || (c >= 0xff00 && c <= 0xff60) || (c >= 0xffe0 && c <= 0xffe6) || (c >= 0x20000 && c <= 0x3fffd);
+}
+function rasterize(text, width, s) {
+  gcan.width = width; // also resets the context state
+  gctx.fillStyle = '#000'; gctx.fillRect(0, 0, width, H);
+  setFont(s); gctx.fillStyle = '#fff';
+  gctx.fillText(text, 0, s.offset + ascentFor(s));
+  const d = gctx.getImageData(0, 0, width, H).data, mask = new Uint8Array(width * H);
+  for (let i = 0; i < mask.length; i++) mask[i] = d[i * 4] > s.threshold ? 1 : 0;
+  return mask;
+}
+function glyph(ch, s) {
+  const key = ch + '\u0000' + specKey(s);
+  let g = glyphCache.get(key);
+  if (!g) {
+    setFont(s);
+    const w = isWideChar(ch) || gctx.measureText(ch).width > 10 ? 16 : 8;
+    g = { kind: 'glyph', w, mask: rasterize(ch, w, s) };
+    glyphCache.set(key, g);
+  }
+  return g;
+}
+const PICTO = /\p{Extended_Pictographic}|\p{Regional_Indicator}/u;
+function isEmoji(g) {
+  if (/\p{Emoji_Presentation}/u.test(g)) return true;
+  return PICTO.test(g) && (/[️‍]|[\u{1F3FB}-\u{1F3FF}]/u.test(g) || g.codePointAt(0) >= 0x1f000);
+}
+function emoji(g) {
+  const key = 'emoji:' + g;
+  let e = glyphCache.get(key);
+  if (!e) {
+    const c = Object.assign(document.createElement('canvas'), { width: 16, height: 16 });
+    const x = c.getContext('2d');
+    x.fillStyle = '#000'; x.fillRect(0, 0, 16, 16);
+    x.font = '14px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+    x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(g, 8, 9);
+    e = { kind: 'emoji', w: 16, canvas: c, rgba: x.getImageData(0, 0, 16, 16).data };
+    glyphCache.set(key, e);
+  }
+  return e;
+}
+function graphemes(s) {
+  if (window.Intl && Intl.Segmenter) return Array.from(new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(s), x => x.segment);
+  return Array.from(s);
+}
+
+/** Build text items exactly as they will be sent: [{kind, w, mask|rgba, color}] */
+function buildTextItems(raw, defaultHex, s) {
+  const def = defaultHex.replace('#', '');
+  const items = [];
+  if (s.varWidth) {
+    let run = '';
+    const flush = () => {
+      if (!run) return;
+      setFont(s);
+      const width = Math.ceil(gctx.measureText(run).width) + 4;
+      const mask = rasterize(run, width, s);
+      for (let x0 = 0; x0 < width; x0 += 8) {
+        const m = new Uint8Array(8 * H);
+        for (let y = 0; y < H; y++) for (let x = 0; x < 8 && x0 + x < width; x++) m[y * 8 + x] = mask[y * width + x0 + x];
+        items.push({ kind: 'glyph', w: 8, mask: m, color: hexToRgb(def) });
+      }
+      run = '';
+    };
+    for (const g of graphemes(P.stripColorTags(raw))) {
+      if (isEmoji(g)) { flush(); items.push(emoji(g)); } else run += g;
+    }
+    flush();
+    return items;
+  }
+  const { text, colors } = P.parseColoredText(raw, def);
+  let idx = 0;
+  for (const g of graphemes(text)) {
+    const color = hexToRgb(colors[idx] || def);
+    idx += g.length;
+    if (isEmoji(g)) { items.push(emoji(g)); continue; }
+    for (const ch of g) items.push({ ...glyph(ch, s), color });
+  }
+  return items;
+}
+function itemsToStrip(items) {
+  const w = Math.max(1, items.reduce((n, it) => n + it.w, 0));
+  const rgba = new Uint8ClampedArray(w * H * 4);
+  let x0 = 0;
+  for (const it of items) {
+    for (let y = 0; y < H; y++) for (let x = 0; x < it.w; x++) {
+      const o = (y * w + x0 + x) * 4;
+      if (it.kind === 'glyph') {
+        if (it.mask[y * it.w + x]) { rgba[o] = it.color[0]; rgba[o + 1] = it.color[1]; rgba[o + 2] = it.color[2]; rgba[o + 3] = 255; }
+      } else {
+        const i = (y * 16 + x) * 4;
+        rgba[o] = it.rgba[i]; rgba[o + 1] = it.rgba[i + 1]; rgba[o + 2] = it.rgba[i + 2]; rgba[o + 3] = 255;
+      }
+    }
+    x0 += it.w;
+  }
+  return { w, rgba };
+}
+function blitStrip(strip, dx, { alpha = 1, colorAt = null } = {}) {
+  for (let y = 0; y < H; y++) for (let x = 0; x < strip.w; x++) {
+    const X = dx + x;
+    if (X < 0 || X >= W) continue;
+    const o = (y * strip.w + x) * 4;
+    if (!strip.rgba[o + 3] || strip.rgba[o] + strip.rgba[o + 1] + strip.rgba[o + 2] < 24) continue;
+    setPx(X, y, colorAt ? colorAt(X, y) : [strip.rgba[o], strip.rgba[o + 1], strip.rgba[o + 2]], alpha);
+  }
+}
+function quickStrip(text, colorHex) { return itemsToStrip(buildTextItems(text, colorHex, UNIFONT_SPEC)); }
+function hsl(h, s = 1, l = .5) {
+  const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l);
+  return [0, 8, 4].map(n => Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1))))));
+}
+async function jpegBytes(canvas) {
+  const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', .95));
+  return P.stripJfif(new Uint8Array(await blob.arrayBuffer()));
+}
+async function pngBytes(canvas) {
+  const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+  return new Uint8Array(await blob.arrayBuffer());
+}
+
+// ---------- Bluetooth ----------
+const ble = { device: null, write: null, notify: null, queue: Promise.resolve(), pending: 0, acks: [], ackListeners: new Set(), respWaiter: null, info: null };
+const connected = () => !!(ble.device && ble.device.gatt.connected && ble.write);
+const settings = () => ({ chunk: clamp(+$('chunkSize').value || P.DEFAULT_CHUNK, 20, 512), ackMs: clamp(+$('ackTimeout').value || 8, 1, 30) * 1000 });
+
+function setConnState(state) {
+  const pill = $('connPill');
+  pill.className = 'pill' + (state === 'live' ? ' live' : state === 'busy' ? ' busy' : '');
+  pill.textContent = { live: 'Connected', busy: 'Connecting…', off: 'Disconnected' }[state];
+  $('connectBtn').textContent = state === 'live' ? 'Disconnect' : ble.device ? 'Reconnect' : 'Connect panel';
+  $('connectBtn').classList.toggle('primary', state !== 'live');
+  const on = state === 'live';
+  ble.live = on;
+  document.querySelectorAll('[data-dev]').forEach(b => { b.disabled = !on || (b.id === 'sendImage' && !img.frames.length); });
+  if (!on) $('livePixels').checked = false;
+  renderDeviceInfo();
+}
+
+function renderDeviceInfo() {
+  const dl = $('deviceInfo'), i = ble.info;
+  const rows = [['Status', connected() ? 'Connected' : 'Not connected']];
+  if (ble.device) rows.push(['Name', ble.device.name || '(unnamed)']);
+  if (i) rows.push(['Panel size', `${i.width} × ${i.height}`], ['Device type', `${i.deviceType} → LED type ${i.ledType}`], ['Password flag', i.passwordFlag === 255 ? 'none' : i.passwordFlag], ['Raw reply', i.raw]);
+  dl.replaceChildren(...rows.flatMap(([k, v]) => [Object.assign(document.createElement('dt'), { textContent: k }), Object.assign(document.createElement('dd'), { textContent: v })]));
+  $('deviceLabel').textContent = connected() ? `${ble.device.name || 'Panel'}${i ? ` · ${i.width}×${i.height}` : ''}` : 'No panel connected';
+}
+
+function onNotify(ev) {
+  const v = ev.target.value;
+  const data = new Uint8Array(v.buffer.slice(v.byteOffset, v.byteOffset + v.byteLength));
+  if (ble.respWaiter) { const r = ble.respWaiter; ble.respWaiter = null; r(data); return; }
+  if (data[0] === 0x05 && data.length >= 5 && [0, 1, 3].includes(data[4])) {
+    ble.acks.push(data[4]);
+    for (const l of [...ble.ackListeners]) l();
+  } else log(`notify ${P.hex(data)}`);
+}
+function waitAck(pred, ms, what) {
+  return new Promise((resolve, reject) => {
+    let timer;
+    const check = () => {
+      const i = ble.acks.findIndex(pred);
+      if (i < 0) return false;
+      const code = ble.acks[i];
+      ble.acks.splice(0, i + 1); // consume everything up to the matching ack
+      clearTimeout(timer); ble.ackListeners.delete(check);
+      resolve(code);
+      return true;
+    };
+    if (check()) return;
+    ble.ackListeners.add(check);
+    timer = setTimeout(() => { ble.ackListeners.delete(check); reject(new Error(`no acknowledgement from panel (${what})`)); }, ms);
+  });
+}
+async function writeBytes(bytes, onProgress) {
+  const { chunk } = settings();
+  const c = ble.write;
+  for (let pos = 0; pos < bytes.length; pos += chunk) {
+    const part = bytes.slice(pos, pos + chunk);
+    if (c.properties.write && c.writeValueWithResponse) await c.writeValueWithResponse(part);
+    else if (c.writeValueWithoutResponse) await c.writeValueWithoutResponse(part);
+    else await c.writeValue(part);
+    onProgress && onProgress(Math.min(bytes.length, pos + chunk));
+  }
+}
+function run(label, task) {
+  if (!connected()) { say('Connect your panel first.', 'error'); return Promise.resolve(false); }
+  ble.pending++;
+  const p = ble.queue.then(task);
+  ble.queue = p.catch(() => {});
+  return p.then(() => true, err => { say(`${label} failed: ${err.message}`, 'error'); log(`✗ ${label}: ${err.message}`); return false; })
+    .finally(() => { ble.pending--; });
+}
+/** ack: 'soft' waits briefly (pypixelcolor waits for one), 'none' skips (set_pixel / live streams) */
+function sendCommand(bytes, label, { ack = 'soft', quiet = false } = {}) {
+  return run(label, async () => {
+    ble.acks = [];
+    await writeBytes(bytes);
+    if (ack !== 'none' && ble.notify) {
+      try { await waitAck(c => c === 0 || c === 1 || c === 3, ack === 'strict' ? settings().ackMs : 1500, label); }
+      catch (e) { if (ack === 'strict') throw e; if (!quiet) log(`· ${label}: no ack, continuing`); }
+    }
+    if (!quiet) log(`✓ ${label}  ${P.hex(bytes)}`);
+  });
+}
+function sendWindows(windows, label) {
+  return run(label, async () => {
+    const total = windows.reduce((n, w) => n + w.length, 0);
+    const bar = $('progress');
+    let done = 0, last = -1;
+    bar.hidden = false; bar.value = 0;
+    try {
+      for (const [i, w] of windows.entries()) {
+        ble.acks = [];
+        await writeBytes(w, n => { bar.value = (done + n) / total; });
+        done += w.length;
+        if (ble.notify) last = await waitAck(c => c === 0 || c === 1 || c === 3, settings().ackMs, `${label} window ${i + 1}/${windows.length}`);
+      }
+      if (ble.notify && last !== 3) await waitAck(c => c === 3, settings().ackMs, `${label} completion`);
+      log(`✓ ${label}: ${total} bytes in ${windows.length} window(s)`);
+      say(`${label} sent.`, 'ok');
+    } finally { bar.hidden = true; }
+  });
+}
+
+// ---------- local bridge: ipixel-bridge.py scans and connects with bleak, like iPixel-CLI ----------
+const bridge = { ws: null, seq: 0, waiting: new Map() };
+const bridgeUrl = () => $('bridgeUrl').value.trim() || 'ws://localhost:8765/ble';
+function servedByBridge() { try { return new URL(bridgeUrl()).host === location.host; } catch { return false; } }
+function useBridge() {
+  const t = $('transport').value;
+  return t === 'bridge' || (t === 'auto' && (!navigator.bluetooth || servedByBridge()));
+}
+function bridgeOpen() {
+  if (bridge.ws && bridge.ws.readyState === WebSocket.OPEN) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    let ws;
+    try { ws = new WebSocket(bridgeUrl()); } catch (e) { reject(e); return; }
+    ws.onopen = () => { bridge.ws = ws; log(`bridge ${ws.url} open`); resolve(); };
+    ws.onerror = () => reject(new Error(`bridge not reachable at ${ws.url}. Start it with: python3 ipixel-bridge.py`));
+    ws.onclose = () => {
+      if (bridge.ws !== ws) return;
+      bridge.ws = null;
+      for (const w of bridge.waiting.values()) w.reject(new Error('bridge closed'));
+      bridge.waiting.clear();
+      log('bridge closed');
+      bridgeLost();
+    };
+    ws.onmessage = ev => {
+      let m;
+      try { m = JSON.parse(ev.data); } catch { return; }
+      if (m.op === 'notify') {
+        const bytes = Uint8Array.from(m.hex.match(/../g) || [], h => parseInt(h, 16));
+        onNotify({ target: { value: new DataView(bytes.buffer) } });
+      } else if (m.op === 'disconnected') bridgeLost();
+      else if (m.id != null && bridge.waiting.has(m.id)) {
+        const w = bridge.waiting.get(m.id);
+        bridge.waiting.delete(m.id);
+        m.op === 'error' ? w.reject(new Error(m.message)) : w.resolve(m);
+      } else if (m.op === 'error') log(`bridge: ${m.message}`);
+    };
+  });
+}
+function bridgeCall(op, args, ms) {
+  if (!bridge.ws) return Promise.reject(new Error('bridge not connected'));
+  const id = ++bridge.seq;
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { bridge.waiting.delete(id); reject(new Error(`bridge ${op} timed out`)); }, ms);
+    bridge.waiting.set(id, { resolve: v => { clearTimeout(timer); resolve(v); }, reject: e => { clearTimeout(timer); reject(e); } });
+    bridge.ws.send(JSON.stringify({ op, id, ...args }));
+  });
+}
+function bridgeLost() {
+  if (!ble.device || !ble.device.bridge || !ble.device.gatt.connected) return;
+  ble.device.gatt.connected = false;
+  onDisconnected();
+}
+async function bridgeScan() {
+  await bridgeOpen();
+  say('Scanning with the bridge…');
+  const { devices } = await bridgeCall('scan', { timeout: 10, all: $('showAll').checked }, 25000);
+  const sel = $('bridgeDevice');
+  const opts = devices.map(d => { const o = new Option(`${d.name || '(unnamed)'} · ${d.address} · ${d.rssi} dBm`, d.address); o.dataset.name = d.name; return o; });
+  sel.replaceChildren(new Option(devices.length ? 'Choose a panel…' : 'Bridge: no panels found', ''), ...opts);
+  if (devices.length === 1) sel.value = devices[0].address;
+  log(`bridge scan: ${devices.map(d => `${d.name} ${d.address}`).join(', ') || 'nothing found'}`);
+  say(devices.length ? `Bridge found ${devices.length} panel(s).` : 'Bridge found no panel. Is it powered on and not connected to the phone app?', devices.length ? 'ok' : 'error');
+  return devices;
+}
+async function pickBridgeDevice() {
+  if (!$('bridgeDevice').value) {
+    const devices = await bridgeScan();
+    if (!devices.length) throw new Error('the bridge found no panel. Is it powered on and not connected to the phone app?');
+    if (devices.length > 1) { selectTab($('tab-device')); throw new Error(`the bridge found ${devices.length} panels. Choose one under Device → Connection settings, then press Connect`); }
+  }
+  const opt = $('bridgeDevice').selectedOptions[0];
+  const address = opt.value;
+  const dev = {
+    bridge: true, id: address, name: opt.dataset.name || address,
+    gatt: {
+      connected: false,
+      async connect() {
+        await bridgeOpen();
+        const r = await bridgeCall('connect', { address }, 30000);
+        if (r.name && r.name !== address) dev.name = r.name;
+        dev.gatt.connected = true;
+        store.set('bridgePanel', { address, name: dev.name });
+      },
+      disconnect() { if (dev.gatt.connected && bridge.ws) bridge.ws.send(JSON.stringify({ op: 'disconnect' })); }
+    }
+  };
+  return dev;
+}
+
+async function connect() {
+  const viaBridge = useBridge();
+  if (!viaBridge && !navigator.bluetooth) {
+    say(window.isSecureContext ? 'This browser has no Web Bluetooth. Pick "Local bridge" under Device → Connection settings, or use Chrome or Edge (desktop or Android), or Bluefy on iPhone/iPad.' : 'Web Bluetooth needs HTTPS or localhost. Open this page from a secure address, or use the local bridge.', 'error');
+    return;
+  }
+  try {
+    if (ble.device && !!ble.device.bridge !== viaBridge) ble.device = null;
+    if (!ble.device && viaBridge) ble.device = await pickBridgeDevice();
+    if (!ble.device) {
+      const opts = $('showAll').checked
+        ? { acceptAllDevices: true, optionalServices: P.SERVICE_UUIDS }
+        : { filters: [{ namePrefix: 'LED' }, { namePrefix: 'iPixel' }, { namePrefix: 'IPIXEL' }, { services: [P.SERVICE_UUIDS[0]] }], optionalServices: P.SERVICE_UUIDS };
+      ble.device = await navigator.bluetooth.requestDevice(opts);
+      ble.device.addEventListener('gattserverdisconnected', onDisconnected);
+    }
+    setConnState('busy');
+    say(`Connecting to ${ble.device.name || 'panel'}${viaBridge ? ' through the bridge' : ''}…`);
+    ble.write = ble.notify = null;
+    if (viaBridge) {
+      await ble.device.gatt.connect();
+      // Same writes as pypixelcolor: write_gatt_char(fa02, chunk, response=True); fa03 notifications come back as messages.
+      ble.write = { properties: { write: true }, writeValueWithResponse: part => bridgeCall('write', { hex: P.hex(part) }, settings().ackMs + 5000) };
+      ble.notify = { bridge: true };
+    } else {
+      const server = await ble.device.gatt.connect();
+      for (const svc of await server.getPrimaryServices()) {
+        try { ble.write = await svc.getCharacteristic(P.WRITE_UUID); } catch { continue; }
+        try { ble.notify = await svc.getCharacteristic(P.NOTIFY_UUID); } catch { ble.notify = null; }
+        break;
+      }
+      if (!ble.write) throw new Error('This device has no iPixel write characteristic (fa02). Is it an iPixel Color panel?');
+      if (ble.notify) {
+        ble.notify.addEventListener('characteristicvaluechanged', onNotify);
+        try { await ble.notify.startNotifications(); } catch (e) { log(`notifications unavailable: ${e.message}`); ble.notify = null; }
+      }
+    }
+    log(`connected to ${ble.device.name || ble.device.id}`);
+    setConnState('live');
+    await fetchDeviceInfo();
+    say(`Connected to ${ble.device.name || 'panel'}${ble.info ? ` · ${ble.info.width}×${ble.info.height}` : ''}. Time synced.`, 'ok');
+    if (ble.info && (ble.info.width !== W || ble.info.height !== H)) say(`Heads up: this panel reports ${ble.info.width}×${ble.info.height}; this studio is laid out for 96×16.`, 'error');
+    if (+$('brightness').value !== 80) sendBrightness();
+  } catch (e) {
+    if (e.name === 'NotFoundError') say('No panel selected. Make sure it is powered on and not connected to the phone app; tick "Show all Bluetooth devices" under Device if it is not listed.');
+    else say(`Connection failed: ${e.message}`, 'error');
+    log(`✗ connect: ${e.message}`);
+    if (ble.device && ble.device.gatt.connected) ble.device.gatt.disconnect();
+    if (e.name !== 'NotFoundError') ble.device = null; // next click opens the chooser again
+    setConnState('off');
+  }
+}
+function fetchDeviceInfo() {
+  return run('device info', async () => {
+    if (!ble.notify) { await writeBytes(P.cmd.getDeviceInfo()); return; }
+    const reply = new Promise((resolve, reject) => {
+      const t = setTimeout(() => { ble.respWaiter = null; reject(new Error('no reply')); }, 3000);
+      ble.respWaiter = d => { clearTimeout(t); resolve(d); };
+    });
+    reply.catch(() => {});
+    await writeBytes(P.cmd.getDeviceInfo());
+    try { ble.info = P.parseDeviceInfo(await reply); log(`device info ${ble.info.raw}`); }
+    catch (e) { log(`· device info: ${e.message}`); }
+    renderDeviceInfo();
+  });
+}
+function onDisconnected() {
+  const wasLive = ble.live;
+  log('disconnected');
+  ble.write = ble.notify = null; ble.respWaiter = null; ble.acks = [];
+  stopMic(false);
+  setConnState('off');
+  if (wasLive) say('Panel disconnected. Press Reconnect to continue.');
+}
+function disconnect() { if (ble.device && ble.device.gatt.connected) ble.device.gatt.disconnect(); }
+
+// ---------- quick controls ----------
+const sendBrightness = () => sendCommand(P.cmd.setBrightness(+$('brightness').value), `brightness ${$('brightness').value}%`);
+const sendBrightnessSoon = debounce(() => { if (connected()) sendBrightness(); }, 250);
+$('brightness').addEventListener('input', () => { $('brightnessOut').textContent = $('brightness').value + '%'; store.set('brightness', +$('brightness').value); sendBrightnessSoon(); });
+$('powerOn').onclick = () => sendCommand(P.cmd.setPower(true), 'power on');
+$('powerOff').onclick = () => sendCommand(P.cmd.setPower(false), 'power off');
+$('orientation').onchange = () => sendCommand(P.cmd.setOrientation(+$('orientation').value), `orientation ${$('orientation').value}`);
+$('syncTime').onclick = () => { const d = new Date(); sendCommand(P.cmd.setTime(d.getHours(), d.getMinutes(), d.getSeconds()), 'sync time').then(ok => ok && say(`Panel time set to ${d.toLocaleTimeString()}.`, 'ok')); };
+$('connectBtn').onclick = () => connected() ? disconnect() : connect();
+
+// ---------- tabs ----------
+const tabs = [...document.querySelectorAll('[role=tab]')];
+const renderers = {};
+function selectTab(tab, focus = false) {
+  tabs.forEach(t => { const on = t === tab; t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1; $(t.getAttribute('aria-controls')).hidden = !on; });
+  if (focus) tab.focus();
+  const name = tab.id.slice(4);
+  renderer = renderers[name] || renderers.idle;
+  $('previewLabel').textContent = { text: 'Text preview · approximate animation', draw: 'Drawing canvas · paint on the panel', image: 'Image preview', clock: 'Clock preview · guide only', score: 'Scoreboard preview', rhythm: 'Equalizer preview', slots: 'Panel', device: 'Panel' }[name];
+  led.classList.toggle('drawable', name === 'draw');
+  store.set('tab', name);
+}
+tabs.forEach((t, i) => {
+  t.onclick = () => selectTab(t);
+  t.onkeydown = e => {
+    const d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+    if (d) { e.preventDefault(); selectTab(tabs[(i + d + tabs.length) % tabs.length], true); }
+  };
+});
+renderers.idle = t => {
+  clearFrame();
+  const s = idleStrip || (idleStrip = quickStrip('iPixel 96×16', '#ffffff'));
+  blitStrip(s, Math.round((W - s.w) / 2), { colorAt: (x) => hsl((x * 4 + t / 20) % 360, .9, .55) });
+};
+let idleStrip = null;
+
+function swatchRow(container, input, onPick) {
+  container.replaceChildren(...SWATCHES.map(c => {
+    const b = document.createElement('button');
+    b.style.setProperty('--c', c); b.setAttribute('aria-label', c); b.setAttribute('aria-pressed', 'false');
+    b.onclick = () => { input.value = c; input.dispatchEvent(new Event('input')); onPick && onPick(c); };
+    return b;
+  }));
+  const sync = () => container.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.getAttribute('aria-label') === input.value.toLowerCase()));
+  input.addEventListener('input', sync); sync();
+}
+
+// ---------- TEXT ----------
+const text = { items: [], strip: null, error: '' };
+function rebuildText() {
+  try {
+    text.items = buildTextItems($('textInput').value || ' ', $('textColor').value, fontSpec());
+    text.error = text.items.length > 255 ? `Too long: ${text.items.length} characters (max 255).` : '';
+  } catch (e) { text.items = []; text.error = e.message; }
+  text.strip = itemsToStrip(text.items);
+  $('textCount').textContent = text.items.length;
+  $('textCount').style.color = text.items.length > 255 ? 'var(--err)' : '';
+  saveText();
+}
+const saveText = debounce(() => store.set('text', {
+  text: $('textInput').value, color: $('textColor').value, bgOn: $('bgOn').checked, bg: $('bgColor').value, anim: $('animation').value,
+  rainbow: $('rainbow').value, speed: $('speed').value, slot: $('textSlot').value, font: $('fontFamily').value, size: $('fontSize').value,
+  offset: $('fontOffset').value, threshold: $('fontThreshold').value, varWidth: $('varWidth').checked
+}), 400);
+renderers.text = t => {
+  const bg = $('bgOn').checked ? hexToRgb($('bgColor').value) : [0, 0, 0];
+  clearFrame(bg);
+  const s = text.strip; if (!s) return;
+  const anim = +$('animation').value, speed = +$('speed').value, rainbow = +$('rainbow').value;
+  const pps = 10 + speed * .55;
+  const colorAt = rainbow ? (x, y) => hsl((x * (3 + rainbow) + y * 2 + t / (12 - rainbow)) % 360) : null;
+  let x = 0, alpha = 1;
+  if (anim === 1 || anim === 2) {
+    const off = (t / 1000 * pps) % (s.w + W);
+    x = anim === 1 ? Math.round(W - off) : Math.round(off - s.w);
+  } else if (anim === 5) { if (Math.floor(t / (1100 - speed * 9)) % 2) return; }
+  else if (anim === 6) alpha = .12 + .88 * (.5 + .5 * Math.sin(t / (1700 - speed * 13) * Math.PI * 2));
+  blitStrip(s, x, { alpha, colorAt });
+  if (anim === 7) for (let k = 0; k < 14; k++) {
+    const fx = (k * 37 + 11) % W, fy = Math.floor((t / (140 - speed) + k * 7) % 20) - 2;
+    setPx(fx + (Math.floor(t / 600 + k) % 2), fy, [220, 235, 255], .9);
+  }
+};
+async function sendText() {
+  rebuildText();
+  if (text.error) { say(text.error, 'error'); return; }
+  const anim = +$('animation').value;
+  try {
+    const blocks = [];
+    for (const it of text.items) {
+      blocks.push(it.kind === 'emoji' ? P.emojiBlock(await jpegBytes(it.canvas), H) : P.charBlock(P.packGlyph(it.mask, it.w, H), it.w, H, it.color));
+    }
+    if (anim === P.ANIMATIONS.SCROLL_RIGHT) blocks.reverse(); // pypixelcolor reverses for right-to-left scrolling
+    const payload = P.buildTextPayload(blocks, {
+      animation: anim, speed: +$('speed').value, rainbow: +$('rainbow').value, color: hexToRgb($('textColor').value),
+      bgColor: $('bgOn').checked ? hexToRgb($('bgColor').value) : null
+    });
+    await sendWindows(P.buildWindows('text', payload, clamp(+$('textSlot').value | 0, 0, 255)), 'Text');
+  } catch (e) { say(`Text failed: ${e.message}`, 'error'); }
+}
+['textInput', 'textColor', 'fontSize', 'fontOffset', 'fontThreshold'].forEach(id => $(id).addEventListener('input', rebuildText));
+['bgOn', 'bgColor', 'animation', 'rainbow', 'textSlot'].forEach(id => $(id).addEventListener('input', saveText));
+$('varWidth').addEventListener('change', rebuildText);
+$('speed').addEventListener('input', () => { $('speedOut').textContent = $('speed').value; saveText(); });
+$('fontFamily').addEventListener('change', () => {
+  const f = FONTS[$('fontFamily').value];
+  if ($('fontFamily').value === 'custom' && !customFontLoaded) $('fontFile').click();
+  $('fontSize').value = f.size; $('fontOffset').value = 0; $('varWidth').checked = f.varWidth;
+  rebuildText();
+});
+$('fontFile').addEventListener('change', async () => {
+  const file = $('fontFile').files[0]; if (!file) return;
+  try {
+    const face = await new FontFace('IPXCustom', await file.arrayBuffer()).load();
+    document.fonts.add(face); customFontLoaded = true; glyphCache = new Map(); rebuildText();
+    say(`Loaded font ${file.name}.`, 'ok');
+  } catch (e) { say(`Could not load that font: ${e.message}`, 'error'); }
+});
+document.querySelectorAll('[data-insert]').forEach(tag => tag.onclick = () => {
+  const ta = $('textInput'), ins = tag.dataset.insert, s = ta.selectionStart, e = ta.selectionEnd;
+  ta.setRangeText(ins === '[/]' ? ins : `${ins}${ta.value.slice(s, e)}[/]`, s, e, 'end'); ta.focus(); rebuildText();
+});
+$('sendText').onclick = sendText;
+$('textToDraw').onclick = () => { clearFrame($('bgOn').checked ? hexToRgb($('bgColor').value) : [0, 0, 0]); blitStrip(text.strip, 0); pushUndo(); draw.px.set(frame); saveDraw(); selectTab($('tab-draw')); say('Text copied to the drawing canvas.'); };
+
+// ---------- DRAW ----------
+const draw = { px: new Uint8ClampedArray(W * H * 4), tool: 'pen', undo: [], stroke: null };
+function drawFill(rgb = [0, 0, 0]) { for (let i = 0; i < draw.px.length; i += 4) { draw.px[i] = rgb[0]; draw.px[i + 1] = rgb[1]; draw.px[i + 2] = rgb[2]; draw.px[i + 3] = 255; } }
+function pushUndo() { draw.undo.push(draw.px.slice()); if (draw.undo.length > 50) draw.undo.shift(); }
+const saveDraw = debounce(() => { let s = ''; for (let i = 0; i < draw.px.length; i += 4) s += String.fromCharCode(draw.px[i], draw.px[i + 1], draw.px[i + 2]); store.set('draw', btoa(s)); }, 500);
+function getDrawPx(x, y) { const i = (y * W + x) * 4; return [draw.px[i], draw.px[i + 1], draw.px[i + 2]]; }
+function putDrawPx(x, y, rgb) {
+  if (x < 0 || y < 0 || x >= W || y >= H) return;
+  const i = (y * W + x) * 4;
+  if (draw.px[i] === rgb[0] && draw.px[i + 1] === rgb[1] && draw.px[i + 2] === rgb[2]) return;
+  draw.px[i] = rgb[0]; draw.px[i + 1] = rgb[1]; draw.px[i + 2] = rgb[2];
+  if ($('livePixels').checked) queueLivePixel(x, y, rgb);
+}
+function floodFill(x, y, rgb) {
+  const target = getDrawPx(x, y).join();
+  if (target === rgb.join()) return;
+  const stack = [[x, y]];
+  while (stack.length) {
+    const [cx, cy] = stack.pop();
+    if (cx < 0 || cy < 0 || cx >= W || cy >= H || getDrawPx(cx, cy).join() !== target) continue;
+    putDrawPx(cx, cy, rgb);
+    stack.push([cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]);
+  }
+}
+function ledCell(e) {
+  const r = led.getBoundingClientRect();
+  return [clamp(Math.floor((e.clientX - r.left) / r.width * W), 0, W - 1), clamp(Math.floor((e.clientY - r.top) / r.height * H), 0, H - 1)];
+}
+function applyTool(x, y) {
+  const rgb = draw.tool === 'erase' ? [0, 0, 0] : hexToRgb($('drawColor').value);
+  const prev = draw.stroke && draw.stroke.last;
+  if (prev) { // connect fast strokes with a line
+    let [x0, y0] = prev; const dx = Math.abs(x - x0), dy = -Math.abs(y - y0), sx = x0 < x ? 1 : -1, sy = y0 < y ? 1 : -1; let err = dx + dy;
+    for (;;) { putDrawPx(x0, y0, rgb); if (x0 === x && y0 === y) break; const e2 = 2 * err; if (e2 >= dy) { err += dy; x0 += sx; } if (e2 <= dx) { err += dx; y0 += sy; } }
+  } else putDrawPx(x, y, rgb);
+  draw.stroke.last = [x, y];
+}
+led.addEventListener('pointerdown', e => {
+  if (!led.classList.contains('drawable')) return;
+  e.preventDefault();
+  const [x, y] = ledCell(e);
+  if (draw.tool === 'pick') { $('drawColor').value = rgbToHex(getDrawPx(x, y)); $('drawColor').dispatchEvent(new Event('input')); return; }
+  pushUndo();
+  if (draw.tool === 'fill') { floodFill(x, y, hexToRgb($('drawColor').value)); saveDraw(); return; }
+  led.setPointerCapture(e.pointerId);
+  draw.stroke = { last: null };
+  applyTool(x, y);
+});
+led.addEventListener('pointermove', e => { if (draw.stroke) { const [x, y] = ledCell(e); applyTool(x, y); } });
+const endStroke = () => { if (draw.stroke) { draw.stroke = null; saveDraw(); } };
+led.addEventListener('pointerup', endStroke); led.addEventListener('pointercancel', endStroke);
+document.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { draw.tool = b.dataset.tool; document.querySelectorAll('[data-tool]').forEach(o => o.setAttribute('aria-pressed', o === b)); });
+$('undo').onclick = () => { const u = draw.undo.pop(); if (u) { draw.px.set(u); saveDraw(); } };
+$('drawClear').onclick = () => { pushUndo(); drawFill(); saveDraw(); };
+function shiftDraw(dx, dy) {
+  pushUndo();
+  const src = draw.px.slice();
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const sx = (x - dx + W) % W, sy = (y - dy + H) % H;
+    draw.px.set(src.subarray((sy * W + sx) * 4, (sy * W + sx) * 4 + 4), (y * W + x) * 4);
+  }
+  saveDraw();
+}
+$('shiftL').onclick = () => shiftDraw(-1, 0); $('shiftR').onclick = () => shiftDraw(1, 0);
+$('shiftU').onclick = () => shiftDraw(0, -1); $('shiftD').onclick = () => shiftDraw(0, 1);
+$('flipH').onclick = () => { pushUndo(); const src = draw.px.slice(); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) draw.px.set(src.subarray((y * W + W - 1 - x) * 4, (y * W + W - x) * 4), (y * W + x) * 4); saveDraw(); };
+renderers.draw = () => { frame.set(draw.px); };
+function drawCanvas() { const c = Object.assign(document.createElement('canvas'), { width: W, height: H }); c.getContext('2d').putImageData(new ImageData(draw.px.slice(), W, H), 0, 0); return c; }
+$('sendDraw').onclick = async () => {
+  const png = await pngBytes(drawCanvas());
+  sendWindows(P.buildWindows('png', png, clamp(+$('drawSlot').value | 0, 0, 255)), 'Drawing');
+};
+$('exportPng').onclick = async () => {
+  const c = drawCanvas(), big = Object.assign(document.createElement('canvas'), { width: W * 8, height: H * 8 });
+  const x = big.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(c, 0, 0, big.width, big.height);
+  const a = Object.assign(document.createElement('a'), { download: 'ipixel-96x16.png', href: big.toDataURL('image/png') });
+  a.click();
+};
+// Live pixels (set_pixel needs DIY/fun mode; pypixelcolor sends them without waiting for acks)
+const livePixels = new Map(); let pumping = false;
+function queueLivePixel(x, y, rgb) { livePixels.set(y * W + x, rgb); pumpPixels(); }
+async function pumpPixels() {
+  if (pumping) return;
+  pumping = true;
+  try {
+    while (livePixels.size && connected() && $('livePixels').checked) {
+      const [k, rgb] = livePixels.entries().next().value;
+      livePixels.delete(k);
+      await sendCommand(P.cmd.setPixel(k % W, Math.floor(k / W), rgb), 'pixel', { ack: 'none', quiet: true });
+    }
+  } finally { pumping = false; livePixels.clear(); }
+}
+$('livePixels').addEventListener('change', () => {
+  if ($('livePixels').checked) sendCommand(P.cmd.setFunMode(true), 'DIY mode on').then(() => say('Live mode: each pixel you paint is sent straight to the panel.', 'ok'));
+});
+
+// ---------- IMAGE / GIF ----------
+const img = { sources: [], frames: [], name: '', isGif: false, t0: 0 };
+const icv = Object.assign(document.createElement('canvas'), { width: W, height: H });
+const ictx = icv.getContext('2d', { willReadFrequently: true });
+function renderFitted(src) {
+  const sw = src.width || src.displayWidth, sh = src.height || src.displayHeight;
+  const mode = $('fitMode').value, pan = +$('pan').value / 100;
+  ictx.setTransform(1, 0, 0, 1, 0, 0);
+  ictx.fillStyle = '#000'; ictx.fillRect(0, 0, W, H);
+  ictx.imageSmoothingEnabled = $('smoothing').value === 'smooth'; ictx.imageSmoothingQuality = 'high';
+  const sa = sw / sh, ta = W / H;
+  if (mode === 'stretch') ictx.drawImage(src, 0, 0, W, H);
+  else if (mode === 'crop') {
+    if (sa > ta) { const cw = sh * ta; ictx.drawImage(src, (sw - cw) * pan, 0, cw, sh, 0, 0, W, H); }
+    else { const ch = sw / ta; ictx.drawImage(src, 0, (sh - ch) * pan, sw, ch, 0, 0, W, H); }
+  } else {
+    if (sa > ta) { const h = W / sa; ictx.drawImage(src, 0, (H - h) / 2, W, h); }
+    else { const w = H * sa; ictx.drawImage(src, (W - w) / 2, 0, w, H); }
+  }
+  return ictx.getImageData(0, 0, W, H).data.slice();
+}
+function rerenderImage() {
+  img.frames = img.sources.map(s => ({ rgba: renderFitted(s.bitmap), delay: s.delay }));
+  $('sendImage').disabled = !connected() || !img.frames.length;
+  $('imageToDraw').disabled = !img.frames.length;
+}
+async function loadImage(file) {
+  if (!file) return;
+  img.sources.forEach(s => s.bitmap.close && s.bitmap.close());
+  img.sources = []; img.frames = []; img.name = file.name;
+  img.isGif = file.type === 'image/gif' || /\.gif$/i.test(file.name);
+  try {
+    const shrink = b => { const s = Math.min(1, 480 / Math.max(b.displayWidth || b.width, b.displayHeight || b.height)); return createImageBitmap(b, { resizeWidth: Math.max(1, Math.round((b.displayWidth || b.width) * s)), resizeHeight: Math.max(1, Math.round((b.displayHeight || b.height) * s)), resizeQuality: 'high' }); };
+    if (img.isGif && 'ImageDecoder' in window) {
+      const dec = new ImageDecoder({ data: await file.arrayBuffer(), type: 'image/gif' });
+      await dec.tracks.ready;
+      const count = Math.min(dec.tracks.selectedTrack.frameCount, 150);
+      for (let i = 0; i < count; i++) {
+        const { image } = await dec.decode({ frameIndex: i });
+        img.sources.push({ bitmap: await shrink(image), delay: image.duration ? image.duration / 1000 : 100 });
+        image.close();
+      }
+      dec.close();
+    } else {
+      const bmp = await createImageBitmap(file);
+      img.sources.push({ bitmap: await shrink(bmp), delay: 100 });
+      bmp.close();
+    }
+    rerenderImage();
+    img.t0 = performance.now();
+    const n = img.sources.length;
+    $('imageInfo').textContent = `${file.name} · ${n > 1 ? `${n} frames, sent as animated GIF` : img.isGif && !('ImageDecoder' in window) ? 'first frame only (this browser cannot decode GIF animation)' : 'sent as PNG'} · ${(file.size / 1024).toFixed(1)} KB original`;
+    selectTab($('tab-image'));
+  } catch (e) { say(`Could not read that image: ${e.message}`, 'error'); }
+}
+renderers.image = t => {
+  if (!img.frames.length) { renderers.idle(t); return; }
+  const total = img.frames.reduce((n, f) => n + f.delay, 0);
+  let at = (t - img.t0) % total, i = 0;
+  while (at > img.frames[i].delay && i < img.frames.length - 1) at -= img.frames[i++].delay;
+  frame.set(img.frames[i].rgba);
+};
+['fitMode', 'pan', 'smoothing'].forEach(id => $(id).addEventListener('input', rerenderImage));
+$('pickImage').onclick = () => $('imageFile').click();
+$('imageFile').onchange = () => loadImage($('imageFile').files[0]);
+const drop = $('drop');
+['dragenter', 'dragover'].forEach(n => drop.addEventListener(n, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(n => drop.addEventListener(n, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => loadImage(e.dataTransfer.files[0]));
+$('sendImage').onclick = async () => {
+  if (!img.frames.length) return;
+  const slot = clamp(+$('imageSlot').value | 0, 0, 255);
+  let windows;
+  if (img.frames.length > 1) {
+    const gif = P.encodeGif(img.frames, W, H);
+    log(`GIF encoded: ${img.frames.length} frames, ${(gif.length / 1024).toFixed(1)} KB`);
+    windows = P.buildWindows('gif', gif, slot);
+  } else {
+    const c = Object.assign(document.createElement('canvas'), { width: W, height: H });
+    c.getContext('2d').putImageData(new ImageData(img.frames[0].rgba.slice(), W, H), 0, 0);
+    windows = P.buildWindows('png', await pngBytes(c), slot);
+  }
+  sendWindows(windows, img.frames.length > 1 ? 'Animation' : 'Image');
+};
+$('imageToDraw').onclick = () => { renderers.image(performance.now()); pushUndo(); draw.px.set(frame); saveDraw(); selectTab($('tab-draw')); };
+
+// ---------- CLOCK ----------
+renderers.clock = t => {
+  clearFrame();
+  const d = new Date(), h24 = $('clock24').checked;
+  let hh = d.getHours(); if (!h24) hh = hh % 12 || 12;
+  const colon = Math.floor(t / 500) % 2 ? ':' : ' ';
+  const time = `${String(hh).padStart(2, '0')}${colon}${String(d.getMinutes()).padStart(2, '0')}`;
+  if ($('clockDate').checked) {
+    const ts = quickStrip(time, '#ffffff'), ds = quickStrip(`${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`, '#ff9d5c');
+    blitStrip(ts, 4); blitStrip(ds, W - ds.w - 4);
+  } else {
+    const s = quickStrip(`${time}${colon}${String(d.getSeconds()).padStart(2, '0')}`, '#ffffff');
+    blitStrip(s, Math.round((W - s.w) / 2));
+  }
+};
+$('sendClock').onclick = async () => {
+  const d = new Date();
+  await sendCommand(P.cmd.setTime(d.getHours(), d.getMinutes(), d.getSeconds()), 'sync time');
+  const ok = await sendCommand(P.cmd.setClockMode({ style: +$('clockStyle').value, format24: $('clock24').checked, showDate: $('clockDate').checked, date: d }), `clock style ${$('clockStyle').value}`);
+  if (ok) say('Clock mode on.', 'ok');
+};
+
+// ---------- SCORE & TIMER ----------
+const score = { p1: 0, p2: 0 };
+const sendScore = () => sendCommand(P.cmd.setScores(score.p1, score.p2), `score ${score.p1}:${score.p2}`);
+const sendScoreSoon = debounce(() => { if (connected() && $('scoreAuto').checked) sendScore(); }, 200);
+function updateScore() { $('p1').textContent = score.p1; $('p2').textContent = score.p2; store.set('score', score); sendScoreSoon(); }
+document.querySelectorAll('[data-score]').forEach(b => b.onclick = () => { const k = b.dataset.score; score[k] = clamp(score[k] + +b.dataset.d, 0, 99); updateScore(); });
+$('resetScore').onclick = () => { score.p1 = score.p2 = 0; updateScore(); };
+$('sendScore').onclick = sendScore;
+document.querySelectorAll('[data-timer]').forEach(b => b.onclick = () => sendCommand(P.cmd.setTimer(+b.dataset.timer), `timer ${b.textContent.toLowerCase()}`));
+renderers.score = () => {
+  clearFrame();
+  const a = quickStrip(String(score.p1).padStart(2, '0'), '#ff453a'), c = quickStrip(':', '#ffffff'), b = quickStrip(String(score.p2).padStart(2, '0'), '#0a84ff');
+  const x = Math.round((W - (a.w + c.w + b.w + 8)) / 2);
+  blitStrip(a, x); blitStrip(c, x + a.w + 4); blitStrip(b, x + a.w + c.w + 8);
+};
+
+// ---------- RHYTHM ----------
+const levels = Array(11).fill(0).map((_, i) => Math.round(7 + 6 * Math.sin(i * .9)));
+const eqInputs = levels.map((v, i) => {
+  const band = document.createElement('div'); band.className = 'band';
+  const input = Object.assign(document.createElement('input'), { type: 'range', min: 0, max: 15, value: v });
+  input.setAttribute('aria-label', `Band ${i + 1}`);
+  const out = document.createElement('output'); out.textContent = v;
+  input.oninput = () => { levels[i] = +input.value; out.textContent = input.value; };
+  band.append(input, out); $('eq').append(band);
+  return { input, out };
+});
+function setLevels(vals) { vals.forEach((v, i) => { levels[i] = v; eqInputs[i].input.value = v; eqInputs[i].out.textContent = v; }); }
+renderers.rhythm = () => {
+  clearFrame();
+  levels.forEach((lv, i) => {
+    const h = Math.round(lv / 15 * H), x0 = 4 + i * 8;
+    for (let y = 0; y < h; y++) { const c = hsl(120 - (y / H) * 120, 1, .5); for (let x = 0; x < 7; x++) setPx(x0 + x, H - 1 - y, c); }
+  });
+};
+$('sendRhythm').onclick = () => sendCommand(P.cmd.setRhythmMode(+$('rhythmStyle').value, levels), 'rhythm levels');
+$('randomEq').onclick = () => setLevels(levels.map(() => Math.floor(Math.random() * 16)));
+$('r2time').oninput = () => { $('r2timeOut').textContent = $('r2time').value; };
+$('sendRhythm2').onclick = () => sendCommand(P.cmd.setRhythmMode2(+$('r2style').value, +$('r2time').value), 'rhythm animation');
+$('micGain').oninput = () => { $('micGainOut').textContent = (+$('micGain').value).toFixed(1) + '×'; };
+let mic = null;
+async function startMic() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    const ac = new AudioContext(), an = ac.createAnalyser();
+    an.fftSize = 2048; an.smoothingTimeConstant = .55;
+    ac.createMediaStreamSource(stream).connect(an);
+    const bins = new Float32Array(an.frequencyBinCount), nyq = ac.sampleRate / 2;
+    const tick = () => {
+      an.getFloatFrequencyData(bins);
+      const vals = [];
+      for (let b = 0; b < 11; b++) {
+        const f0 = 60 * Math.pow(9000 / 60, b / 11), f1 = 60 * Math.pow(9000 / 60, (b + 1) / 11);
+        let peak = -140;
+        for (let i = Math.floor(f0 / nyq * bins.length); i <= Math.min(bins.length - 1, Math.ceil(f1 / nyq * bins.length)); i++) peak = Math.max(peak, bins[i]);
+        vals.push(clamp(Math.round((peak + 85) / 55 * 15 * +$('micGain').value), 0, 15));
+      }
+      setLevels(vals);
+      if (connected() && ble.pending === 0) sendCommand(P.cmd.setRhythmMode(+$('rhythmStyle').value, vals), 'rhythm', { ack: 'none', quiet: true });
+    };
+    mic = { stream, ac, timer: setInterval(tick, 120) };
+    $('micBtn').setAttribute('aria-pressed', 'true'); $('micBtn').textContent = 'Stop microphone';
+    selectTab($('tab-rhythm'));
+    say(connected() ? 'Listening… levels are streaming to the panel.' : 'Listening… connect the panel to stream the levels.', 'ok');
+  } catch (e) { say(`Microphone unavailable: ${e.message}`, 'error'); }
+}
+function stopMic(announce = true) {
+  if (!mic) return;
+  clearInterval(mic.timer); mic.stream.getTracks().forEach(t => t.stop()); mic.ac.close(); mic = null;
+  $('micBtn').setAttribute('aria-pressed', 'false'); $('micBtn').textContent = 'Start microphone';
+  if (announce) say('Microphone stopped.');
+}
+$('micBtn').onclick = () => mic ? stopMic() : startMic();
+
+// ---------- SLOTS & SCHEDULE ----------
+for (let n = 1; n <= 10; n++) {
+  const b = Object.assign(document.createElement('button'), { textContent: n });
+  b.dataset.dev = ''; b.setAttribute('aria-label', `Show slot ${n}`);
+  b.onclick = () => { $('slotNum').value = n; sendCommand(P.cmd.showSlot(n), `show slot ${n}`); };
+  $('slotGrid').append(b);
+}
+$('showSlot').onclick = () => sendCommand(P.cmd.showSlot(clamp(+$('slotNum').value | 0, 0, 255)), `show slot ${$('slotNum').value}`);
+$('deleteSlot').onclick = () => {
+  const n = clamp(+$('slotNum').value | 0, 0, 255);
+  if (confirm(`Delete slot ${n} from the panel?`)) sendCommand(P.cmd.deleteSlot(n), `delete slot ${n}`);
+};
+const DAY_LABELS = [['mon', 'Mon'], ['tue', 'Tue'], ['wed', 'Wed'], ['thu', 'Thu'], ['fri', 'Fri'], ['sat', 'Sat'], ['sun', 'Sun']];
+$('schedDays').append(...DAY_LABELS.map(([k, l]) => { const lab = document.createElement('label'); lab.innerHTML = `<input type="checkbox" value="${k}" checked> ${l}`; return lab; }));
+$('sendSchedule').onclick = () => {
+  const [hour, minute] = ($('schedTime').value || '00:00').split(':').map(Number);
+  const days = [...$('schedDays').querySelectorAll('input:checked')].map(i => i.value);
+  if (!days.length) { say('Pick at least one day.', 'error'); return; }
+  sendCommand(P.cmd.setSchedule({ hour, minute, on: $('schedAction').value === '1', days, slot: clamp(+$('schedSlot').value | 0, 0, 255) }), `schedule ${$('schedTime').value} ${$('schedAction').value === '1' ? 'on' : 'off'}`)
+    .then(ok => ok && say('Schedule saved on the panel.', 'ok'));
+};
+
+// ---------- DEVICE ----------
+$('funOn').onclick = () => sendCommand(P.cmd.setFunMode(true), 'DIY mode on');
+$('funOff').onclick = () => sendCommand(P.cmd.setFunMode(false), 'DIY mode off');
+$('clearDevice').onclick = () => { if (confirm('Erase all stored content and settings on the panel? This cannot be undone.')) sendCommand(P.cmd.clear(), 'erase panel').then(ok => ok && say('Panel memory erased.', 'ok')); };
+$('sendRaw').onclick = () => { try { sendCommand(P.parseHex($('rawHex').value), 'raw command'); } catch (e) { say(e.message, 'error'); } };
+$('clearLog').onclick = () => { logLines.length = 0; $('log').textContent = ''; };
+['showAll', 'chunkSize', 'ackTimeout', 'transport', 'bridgeUrl'].forEach(id => $(id).addEventListener('change', () => store.set('conn', { showAll: $('showAll').checked, chunk: $('chunkSize').value, ack: $('ackTimeout').value, transport: $('transport').value, bridgeUrl: $('bridgeUrl').value.trim() })));
+$('bridgeScan').onclick = () => bridgeScan().catch(e => { say(`Bridge scan failed: ${e.message}`, 'error'); log(`✗ bridge scan: ${e.message}`); });
+$('bridgeDevice').addEventListener('change', () => { if (ble.device && ble.device.bridge && !connected()) { ble.device = null; setConnState('off'); } });
+
+// ---------- PWA ----------
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; $('installBtn').hidden = false; });
+$('installBtn').onclick = async () => { if (!installPrompt) return; installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; $('installBtn').hidden = true; };
+window.addEventListener('appinstalled', () => { $('installBtn').hidden = true; say('Installed. Launch iPixel Color from your home screen or app list.', 'ok'); });
+if ('serviceWorker' in navigator && window.isSecureContext && /^https?:$/.test(location.protocol)) {
+  navigator.serviceWorker.register('./ipixelcolor-sw.js', { scope: './', updateViaCache: 'none' })
+    .then(() => navigator.serviceWorker.ready)
+    .then(() => { $('appStatus').textContent = 'Available offline.'; })
+    .catch(e => { $('appStatus').textContent = `Offline cache unavailable (${e.message}).`; });
+}
+
+// ---------- init ----------
+(function init() {
+  const t = store.get('text', null);
+  if (t) {
+    $('textInput').value = t.text ?? $('textInput').value; $('textColor').value = t.color || '#ffffff'; $('bgOn').checked = !!t.bgOn; $('bgColor').value = t.bg || '#001a40';
+    $('animation').value = t.anim ?? '1'; $('rainbow').value = t.rainbow ?? '0'; $('speed').value = t.speed ?? 80; $('textSlot').value = t.slot ?? 0;
+    $('fontFamily').value = t.font === 'custom' ? 'unifont' : (t.font || 'unifont'); $('fontSize').value = t.font === 'custom' ? 16 : (t.size || 16);
+    $('fontOffset').value = t.offset || 0; $('fontThreshold').value = t.threshold || 128; $('varWidth').checked = t.font === 'custom' ? false : !!t.varWidth;
+  }
+  $('speedOut').textContent = $('speed').value;
+  const b = store.get('brightness', 80); $('brightness').value = b; $('brightnessOut').textContent = b + '%';
+  const sc = store.get('score', null); if (sc) { score.p1 = clamp(sc.p1 | 0, 0, 99); score.p2 = clamp(sc.p2 | 0, 0, 99); $('p1').textContent = score.p1; $('p2').textContent = score.p2; }
+  const bp = store.get('bridgePanel', null); // last panel: connect by address, bleak finds it without a scan here
+  if (bp && bp.address) { const o = new Option(`${bp.name || '(unnamed)'} · ${bp.address} · last used`, bp.address); o.dataset.name = bp.name || ''; $('bridgeDevice').append(o); $('bridgeDevice').value = bp.address; }
+  if (location.protocol === 'http:' && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) $('bridgeUrl').value = `ws://${location.host}/ble`;
+  const c = store.get('conn', null); if (c) { $('showAll').checked = !!c.showAll; $('chunkSize').value = c.chunk || 244; $('ackTimeout').value = c.ack || 8; $('transport').value = c.transport || 'auto'; if (c.bridgeUrl) $('bridgeUrl').value = c.bridgeUrl; }
+  drawFill();
+  const d = store.get('draw', null);
+  if (d) try { const s = atob(d); for (let i = 0; i < W * H; i++) draw.px.set([s.charCodeAt(i * 3), s.charCodeAt(i * 3 + 1), s.charCodeAt(i * 3 + 2)], i * 4); } catch { drawFill(); }
+  swatchRow($('textSwatches'), $('textColor'));
+  swatchRow($('drawSwatches'), $('drawColor'));
+  setConnState('off');
+  rebuildText();
+  selectTab($('tab-' + store.get('tab', 'text')) || tabs[0]);
+  if (useBridge()) say(`Connect panel will use the local bridge at ${bridgeUrl()}${navigator.bluetooth ? '' : ' (this browser has no Web Bluetooth)'}. Start it with: python3 ipixel-bridge.py`);
+  const face = new FontFace('Unifont', 'url(./fonts/unifont.woff2) format("woff2")');
+  face.load().then(f => { document.fonts.add(f); glyphCache = new Map(); idleStrip = null; rebuildText(); })
+    .catch(e => log(`Unifont failed to load (${e.message}); using fallback font`));
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
